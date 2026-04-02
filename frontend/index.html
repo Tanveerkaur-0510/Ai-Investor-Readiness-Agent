@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Investor Readiness Scorer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .custom-card {
+            background-color: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+            border: 1px solid #e2e8f0;
+        }
+        .animate-fade { animation: fadeIn 0.3s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-900 min-h-screen font-sans">
+
+    <!-- Auth View -->
+    <div id="authView" class="min-h-screen flex items-center justify-center p-4">
+        <div class="custom-card w-full max-w-md p-8 animate-fade">
+            <h1 class="text-2xl font-bold text-center mb-6 text-slate-800">AI Investor Readiness Scorer</h1>
+            
+            <!-- Login Form -->
+            <form id="loginForm" class="space-y-4">
+                <h2 class="text-xl font-semibold text-center mb-4">Sign In</h2>
+                <input type="email" id="loginEmail" placeholder="Email" required autocomplete="email" class="w-full p-3 rounded-lg bg-slate-100 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <input type="password" id="loginPassword" placeholder="Password" required class="w-full p-3 rounded-lg bg-slate-100 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium p-3 rounded-lg transition-colors">Log In</button>
+                <p class="text-center text-sm text-slate-500 mt-4">Don't have an account? <button type="button" onclick="toggleAuth('register')" class="text-blue-600 font-semibold cursor-pointer">Register</button></p>
+            </form>
+
+            <!-- Register Form -->
+            <form id="registerForm" class="space-y-4 hidden">
+                <h2 class="text-xl font-semibold text-center mb-4">Create Account</h2>
+                <input type="text" id="regName" placeholder="Full Name" required class="w-full p-3 rounded-lg bg-slate-100 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <input type="email" id="regEmail" placeholder="Email" required class="w-full p-3 rounded-lg bg-slate-100 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <input type="password" id="regPassword" placeholder="Password" required class="w-full p-3 rounded-lg bg-slate-100 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <button type="submit" class="w-full bg-green-600 hover:bg-green-700 text-white font-medium p-3 rounded-lg transition-colors">Sign Up</button>
+                <p class="text-center text-sm text-slate-500 mt-4">Already have an account? <button type="button" onclick="toggleAuth('login')" class="text-blue-600 font-semibold cursor-pointer">Log In</button></p>
+            </form>
+        </div>
+    </div>
+
+    <!-- App View -->
+    <div id="appView" class="hidden min-h-screen flex flex-col">
+        <!-- Navbar -->
+        <nav class="bg-white border-b border-slate-200 py-3 px-6 flex justify-between items-center shadow-sm sticky top-0 z-10">
+            <div class="text-xl font-bold tracking-tight text-slate-800">
+                <span class="text-blue-600">AI</span> Investor Scorer
+            </div>
+            <div class="flex items-center space-x-4">
+                <button onclick="showTab('dashboard')" id="btnDashboard" class="text-blue-600 font-semibold px-3 py-2 rounded-md hover:bg-slate-50 transition-colors">Dashboard</button>
+                <button onclick="showTab('history')" id="btnHistory" class="text-slate-500 font-medium px-3 py-2 rounded-md hover:bg-slate-50 transition-colors">History</button>
+                <button onclick="logout()" class="text-red-500 font-medium px-3 py-2 rounded-md hover:bg-red-50 transition-colors">Logout</button>
+            </div>
+        </nav>
+
+        <!-- Main Content Area -->
+        <main class="flex-1 w-full max-w-5xl mx-auto p-4 md:p-8 animate-fade">
+            
+            <!-- Dashboard Tab -->
+            <div id="tabDashboard">
+                <div class="text-center mb-8">
+                    <h2 class="text-3xl font-bold text-slate-800">Analyze Pitch Deck</h2>
+                    <p class="text-slate-500 mt-2">Upload your deal pack to get an instant AI evaluation of investment readiness.</p>
+                </div>
+
+                <div class="custom-card p-6 md:p-10 text-center relative max-w-2xl mx-auto">
+                    <form id="uploadForm" class="space-y-6">
+                        <div class="relative border-2 border-dashed border-slate-300 rounded-xl p-8 bg-slate-50 hover:bg-slate-100 transition-colors cursor-pointer group">
+                            <input type="file" id="fileInput" accept=".pdf" required class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
+                            <div class="text-4xl mb-3 group-hover:scale-110 transition-transform">📄</div>
+                            <p class="text-slate-600 font-medium" id="fileNameDisplay">Click or drag PDF to upload</p>
+                            <p class="text-xs text-slate-400 mt-1">PDF max 10MB</p>
+                        </div>
+                        <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-4 rounded-xl shadow-md transition-all">
+                            Analyze Document
+                        </button>
+                    </form>
+
+                    <div id="loading" class="hidden mt-8">
+                        <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-600 mx-auto"></div>
+                        <p class="mt-4 text-slate-600 font-medium">Analyzing like a VC... 🧠</p>
+                    </div>
+                </div>
+
+                <!-- Results Section -->
+                <div id="result" class="mt-10 hidden space-y-6 animate-fade">
+                    <div id="statusBox" class="p-6 rounded-2xl text-center text-3xl font-extrabold shadow-sm border"></div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Score Breakdown -->
+                        <div class="custom-card p-6 flex flex-col justify-center">
+                            <div class="flex items-center justify-between mb-4">
+                                <h2 class="text-xl font-bold text-slate-800">Overall Score</h2>
+                                <div id="score" class="text-4xl font-extrabold text-blue-600"></div>
+                            </div>
+                            <h3 class="text-sm font-semibold uppercase text-slate-400 mb-2">Breakdown</h3>
+                            <ul id="breakdown" class="space-y-2 text-sm text-slate-700 font-medium"></ul>
+                        </div>
+
+                        <!-- Strengths -->
+                        <div class="custom-card p-6 bg-green-50/50 border-green-100">
+                            <h2 class="text-lg font-bold text-green-800 mb-3 flex items-center">✅ Strengths</h2>
+                            <ul id="strengths" class="space-y-2 text-sm text-green-900 list-disc list-inside"></ul>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Weaknesses -->
+                        <div class="custom-card p-6 bg-red-50/50 border-red-100">
+                            <h2 class="text-lg font-bold text-red-800 mb-3 flex items-center">❌ Weaknesses</h2>
+                            <ul id="weaknesses" class="space-y-2 text-sm text-red-900 list-disc list-inside"></ul>
+                        </div>
+                        
+                        <!-- Missing & Suggestions -->
+                        <div class="space-y-6">
+                            <div class="custom-card p-6 bg-amber-50/50 border-amber-100">
+                                <h2 class="text-lg font-bold text-amber-800 mb-3 flex items-center">⚠️ Missing Items</h2>
+                                <ul id="missing" class="space-y-2 text-sm text-amber-900 list-disc list-inside"></ul>
+                            </div>
+                            <div class="custom-card p-6 bg-blue-50/50 border-blue-100">
+                                <h2 class="text-lg font-bold text-blue-800 mb-3 flex items-center">💡 Suggestions</h2>
+                                <ul id="suggestions" class="space-y-2 text-sm text-blue-900 list-disc list-inside"></ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- History Tab -->
+            <div id="tabHistory" class="hidden">
+                <h2 class="text-2xl font-bold text-slate-800 mb-6">Past Analyses</h2>
+                <div id="historyLoading" class="text-center py-10 hidden">
+                    <div class="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-slate-600 mx-auto"></div>
+                </div>
+                <div id="historyList" class="space-y-4"></div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- Chat Modal -->
+    <div id="chatModal" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="custom-card w-full max-w-2xl h-[80vh] flex flex-col animate-fade overflow-hidden">
+            <!-- Header -->
+            <div class="flex justify-between items-center p-4 border-b border-slate-200 bg-slate-50">
+                <div>
+                    <h2 class="font-bold text-slate-800 text-lg">Discuss Document</h2>
+                    <p class="text-xs text-slate-500" id="chatDocName">filename.pdf</p>
+                </div>
+                <button onclick="closeChat()" class="text-slate-400 hover:text-slate-600 text-xl font-bold">&times;</button>
+            </div>
+            
+            <!-- Messages -->
+            <div id="chatMessages" class="flex-1 p-4 overflow-y-auto bg-slate-50 space-y-4">
+                <div class="bg-blue-100 text-blue-900 p-3 rounded-lg rounded-tl-none max-w-[80%] shadow-sm text-sm">
+                    Hi! I'm the AI Analyst that reviewed this Pitch Deck. What questions do you have about the rating?
+                </div>
+            </div>
+
+            <!-- Input Form -->
+            <form id="chatForm" class="p-4 bg-white border-t border-slate-200 flex gap-2">
+                <input type="text" id="chatInput" placeholder="Ask about weaknesses, financials..." required autocomplete="off" class="flex-1 p-3 rounded-lg bg-slate-100 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+                <button type="submit" id="chatBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-medium px-6 py-3 rounded-lg transition-colors">Send</button>
+            </form>
+        </div>
+    </div>
+
+<script>
+    // App State
+    let currentUser = null;
+    let currentToken = localStorage.getItem('token');
+    let currentChatDocId = null;
+
+    // Init Validation
+    if(currentToken) {
+        checkAuth();
+    }
+
+    // Toggle forms
+    function toggleAuth(type) {
+        if(type === 'register') {
+            document.getElementById('loginForm').classList.add('hidden');
+            document.getElementById('registerForm').classList.remove('hidden');
+        } else {
+            document.getElementById('registerForm').classList.add('hidden');
+            document.getElementById('loginForm').classList.remove('hidden');
+        }
+    }
+
+    // Authentication Checks
+    async function checkAuth() {
+        try {
+            const res = await fetch('/api/auth/me', {
+                headers: { 'Authorization': `Bearer ${currentToken}` }
+            });
+            if(res.ok) {
+                currentUser = await res.json();
+                document.getElementById('authView').classList.add('hidden');
+                document.getElementById('appView').classList.remove('hidden');
+            } else {
+                logout();
+            }
+        } catch(e) {
+            logout();
+        }
+    }
+
+    function logout() {
+        localStorage.removeItem('token');
+        currentToken = null;
+        currentUser = null;
+        document.getElementById('authView').classList.remove('hidden');
+        document.getElementById('appView').classList.add('hidden');
+    }
+
+    // Login logic
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const btn = e.target.querySelector('button');
+        btn.innerHTML = "Logging in...";
+        try {
+            const res = await fetch('/api/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    email: document.getElementById('loginEmail').value,
+                    password: document.getElementById('loginPassword').value
+                })
+            });
+            const data = await res.json();
+            if(!res.ok) throw new Error(data.detail || "Login failed");
+            
+            localStorage.setItem('token', data.access_token);
+            currentToken = data.access_token;
+            await checkAuth();
+        } catch(err) {
+            alert(err.message);
+        } finally {
+            btn.innerHTML = "Log In";
+        }
+    });
+
+    // Register logic
+    document.getElementById('registerForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const btn = e.target.querySelector('button');
+        btn.innerHTML = "Signing up...";
+        try {
+            const res = await fetch('/api/auth/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    username: document.getElementById('regName').value,
+                    email: document.getElementById('regEmail').value,
+                    password: document.getElementById('regPassword').value
+                })
+            });
+            const data = await res.json();
+            if(!res.ok) throw new Error(data.detail || "Registration failed");
+            
+            alert("Registration successful! Please sign in.");
+            toggleAuth('login');
+        } catch(err) {
+            alert(err.message);
+        } finally {
+            btn.innerHTML = "Sign Up";
+        }
+    });
+
+    // File Input UI update
+    document.getElementById('fileInput').addEventListener('change', function(e) {
+        if(this.files && this.files.length > 0) {
+            document.getElementById('fileNameDisplay').innerText = this.files[0].name;
+            document.getElementById('fileNameDisplay').classList.add("text-blue-600");
+        } else {
+            document.getElementById('fileNameDisplay').innerText = "Click or drag PDF to upload";
+            document.getElementById('fileNameDisplay').classList.remove("text-blue-600");
+        }
+    });
+
+    // Upload & Anaylze Document
+    document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const file = document.getElementById('fileInput').files[0];
+        if (!file) return alert('Upload file');
+
+        const formData = new FormData();
+        formData.append('file', file);
+
+        document.getElementById('loading').classList.remove('hidden');
+        document.getElementById('result').classList.add('hidden');
+
+        try {
+            const res = await fetch('/api/score', {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${currentToken}` },
+                body: formData
+            });
+            const data = await res.json();
+            if(data.error) {
+                throw new Error(data.error);
+            }
+            renderResult(data);
+        } catch (err) {
+            alert("Upload Blocked: " + err.message);
+            // reset file input
+            document.getElementById('fileInput').value = '';
+            document.getElementById('fileNameDisplay').innerText = "Click or drag PDF to upload";
+            document.getElementById('fileNameDisplay').classList.remove("text-blue-600");
+        } finally {
+            document.getElementById('loading').classList.add('hidden');
+        }
+    });
+
+    function renderResult(data) {
+        document.getElementById('result').classList.remove('hidden');
+
+        const statusBox = document.getElementById('statusBox');
+        statusBox.innerText = data.final_status;
+
+        if (data.final_status === "Ready") {
+            statusBox.className = "p-6 rounded-2xl text-center text-3xl font-extrabold shadow-sm border bg-green-100 text-green-800 border-green-200";
+        } else if (data.final_status === "Needs Work") {
+            statusBox.className = "p-6 rounded-2xl text-center text-3xl font-extrabold shadow-sm border bg-yellow-100 text-yellow-800 border-yellow-200";
+        } else {
+            statusBox.className = "p-6 rounded-2xl text-center text-3xl font-extrabold shadow-sm border bg-red-100 text-red-800 border-red-200";
+        }
+
+        document.getElementById('score').innerText = (data.overall_score || 0).toFixed(1) + "/10";
+
+        // Render breakdowns nicely
+        const bd = data.breakdown || {};
+        document.getElementById('breakdown').innerHTML = `
+            <li class="flex justify-between items-center"><span class="text-slate-500">📄 Documentation</span> <span class="font-bold text-slate-800">${(bd.documentation||0).toFixed(1)}/10</span></li>
+            <li class="flex justify-between items-center"><span class="text-slate-500">💰 Financials</span> <span class="font-bold text-slate-800">${(bd.financials||0).toFixed(1)}/10</span></li>
+            <li class="flex justify-between items-center"><span class="text-slate-500">⚠️ Risk</span> <span class="font-bold text-slate-800">${(bd.risk||0).toFixed(1)}/10</span></li>
+            <li class="flex justify-between items-center"><span class="text-slate-500">🎯 Suitability</span> <span class="font-bold text-slate-800">${(bd.suitability||0).toFixed(1)}/10</span></li>
+        `;
+
+        renderList('strengths', data.strengths || []);
+        renderList('weaknesses', data.weaknesses || []);
+        renderList('missing', data.missing_items || []);
+        renderList('suggestions', data.suggestions || []);
+    }
+
+    function renderList(id, items) {
+        const el = document.getElementById(id);
+        if(!items || items.length === 0) {
+            el.innerHTML = `<li class="italic text-slate-400">None identified</li>`;
+            return;
+        }
+        el.innerHTML = items.map(i => `<li>${i}</li>`).join('');
+    }
+
+    // Tabs
+    function showTab(tab) {
+        document.getElementById('tabDashboard').classList.add('hidden');
+        document.getElementById('tabHistory').classList.add('hidden');
+        document.getElementById('btnDashboard').className = "text-slate-500 font-medium px-3 py-2 rounded-md hover:bg-slate-50 transition-colors";
+        document.getElementById('btnHistory').className = "text-slate-500 font-medium px-3 py-2 rounded-md hover:bg-slate-50 transition-colors";
+
+        if (tab === 'dashboard') {
+            document.getElementById('tabDashboard').classList.remove('hidden');
+            document.getElementById('btnDashboard').className = "text-blue-600 font-semibold px-3 py-2 rounded-md hover:bg-slate-50 transition-colors";
+        } else {
+            document.getElementById('tabHistory').classList.remove('hidden');
+            document.getElementById('btnHistory').className = "text-blue-600 font-semibold px-3 py-2 rounded-md hover:bg-slate-50 transition-colors";
+            loadHistory();
+        }
+    }
+
+    // History Logic
+    async function loadHistory() {
+        const hl = document.getElementById('historyLoading');
+        const list = document.getElementById('historyList');
+        hl.classList.remove('hidden');
+        list.innerHTML = '';
+        try {
+            const res = await fetch('/api/history', {
+                headers: { 'Authorization': `Bearer ${currentToken}` }
+            });
+            const data = await res.json();
+            hl.classList.add('hidden');
+
+            if(data.length === 0) {
+                list.innerHTML = `<p class="text-center text-slate-500 py-10">No past analyses found.</p>`;
+                return;
+            }
+
+            data.forEach(item => {
+                let badgeClass = "bg-yellow-100 text-yellow-800";
+                if(item.final_status === "Ready") badgeClass = "bg-green-100 text-green-800";
+                if(item.final_status === "High Risk") badgeClass = "bg-red-100 text-red-800";
+                
+                const bd = item.breakdown || {};
+
+                list.innerHTML += `
+                    <div class="custom-card p-5 flex flex-col justify-between gap-4 transition-transform hover:-translate-y-1">
+                        <div class="flex flex-col md:flex-row justify-between md:items-center">
+                            <div>
+                                <h3 class="font-bold text-slate-800 text-lg flex items-center gap-2">
+                                    📄 ${item.filename} 
+                                    <span class="text-xs px-2 py-1 rounded-full ${badgeClass} font-semibold">${item.final_status}</span>
+                                </h3>
+                                <p class="text-sm text-slate-500 mt-1">Overall Score: <span class="font-bold text-slate-700">${item.overall_score.toFixed(1)}/10</span></p>
+                                <p class="text-xs text-slate-400 mt-1">${new Date(item.created_at).toLocaleString()}</p>
+                            </div>
+                            <button onclick="openChat('${item.id}', '${item.filename.replace(/'/g, "\\'")}')" class="mt-4 md:mt-0 bg-slate-100 hover:bg-blue-50 hover:text-blue-600 text-slate-700 font-medium px-4 py-2 rounded-lg border border-slate-200 transition-colors flex items-center gap-2">
+                                💬 Discuss Assessment
+                            </button>
+                        </div>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm bg-slate-50 p-3 rounded-lg border border-slate-100 mt-2">
+                            <div class="text-center"><div class="font-bold text-slate-700">${(bd.documentation||0).toFixed(1)}</div><div class="text-xs text-slate-400">Doc</div></div>
+                            <div class="text-center"><div class="font-bold text-slate-700">${(bd.financials||0).toFixed(1)}</div><div class="text-xs text-slate-400">Fin</div></div>
+                            <div class="text-center"><div class="font-bold text-slate-700">${(bd.risk||0).toFixed(1)}</div><div class="text-xs text-slate-400">Risk</div></div>
+                            <div class="text-center"><div class="font-bold text-slate-700">${(bd.suitability||0).toFixed(1)}</div><div class="text-xs text-slate-400">Suit</div></div>
+                        </div>
+                    </div>
+                `;
+            });
+
+        } catch(e) {
+            hl.classList.add('hidden');
+            list.innerHTML = `<p class="text-red-500 py-4">Failed to load history.</p>`;
+        }
+    }
+
+    // Chatbot Logic
+    function openChat(docId, docName) {
+        currentChatDocId = docId;
+        document.getElementById('chatDocName').innerText = docName;
+        document.getElementById('chatModal').classList.remove('hidden');
+        
+        // Clear old messages except the intro
+        const chatBox = document.getElementById('chatMessages');
+        chatBox.innerHTML = `
+            <div class="bg-blue-100 text-blue-900 p-3 rounded-lg rounded-tl-none max-w-[80%] shadow-sm text-sm">
+                Hi! I'm the AI Analyst that reviewed this Pitch Deck. What questions do you have about the rating?
+            </div>
+        `;
+    }
+
+    function closeChat() {
+        document.getElementById('chatModal').classList.add('hidden');
+        currentChatDocId = null;
+    }
+
+    document.getElementById('chatForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const input = document.getElementById('chatInput');
+        const text = input.value.trim();
+        if(!text) return;
+        
+        const chatBox = document.getElementById('chatMessages');
+        
+        // Add User Message
+        chatBox.innerHTML += `
+            <div class="bg-indigo-600 text-white p-3 rounded-lg rounded-tr-none max-w-[80%] ml-auto shadow-sm text-sm">
+                ${text}
+            </div>
+        `;
+        
+        input.value = '';
+        chatBox.scrollTop = chatBox.scrollHeight;
+        document.getElementById('chatBtn').innerText = "...";
+        
+        try {
+            const res = await fetch('/api/chat', {
+                method: 'POST',
+                headers: { 
+                    'Authorization': `Bearer ${currentToken}`,
+                    'Content-Type': 'application/json' 
+                },
+                body: JSON.stringify({
+                    doc_id: currentChatDocId,
+                    message: text
+                })
+            });
+            const data = await res.json();
+            
+            if(!res.ok) throw new Error(data.detail || "Chat error");
+            
+            chatBox.innerHTML += `
+                <div class="bg-white border border-slate-200 text-slate-800 p-3 rounded-lg rounded-tl-none max-w-[80%] shadow-sm text-sm">
+                    ${data.response}
+                </div>
+            `;
+            
+        } catch(e) {
+            chatBox.innerHTML += `
+                <div class="bg-red-100 text-red-900 p-3 rounded-lg rounded-tl-none max-w-[80%] shadow-sm text-sm">
+                    Sorry, I couldn't reach the server right now. (${e.message})
+                </div>
+            `;
+        } finally {
+            document.getElementById('chatBtn').innerText = "Send";
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+    });
+
+</script>
+</body>
+</html>
